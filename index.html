@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0284c7">
+  <title>CarePoint | Hospital Management</title>
+  <link rel="stylesheet" href="/style.css">
+  <style>
+    .sidebar { position: sticky; top: 0; height: 100vh; }
+    .brand-mark { width: 34px; height: 34px; display: inline-grid; place-items: center; color: white; background: var(--primary); border-radius: 10px; font-size: 1.2rem; }
+    .brand h2 { gap: 10px; }
+    .sidebar-footer small { display: block; margin-top: 10px; color: var(--text-muted); text-align: center; }
+    .topbar { position: sticky; top: 0; z-index: 2; }
+    .topbar-meta { display: flex; align-items: center; gap: 14px; color: var(--text-muted); font-size: .9rem; }
+    .status-dot { display: inline-block; width: 8px; height: 8px; margin-right: 7px; border-radius: 50%; background: var(--success); }
+    .welcome { display: flex; justify-content: space-between; align-items: center; gap: 20px; margin-bottom: 24px; }
+    .welcome h2 { font-size: 1.5rem; margin-bottom: 5px; }
+    .welcome p, .muted { color: var(--text-muted); }
+    .welcome-date { padding: 10px 14px; background: #fff; border: 1px solid var(--border); border-radius: 8px; color: var(--text-muted); white-space: nowrap; }
+    .stats-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .stat-card { position: relative; overflow: hidden; }
+    .stat-card::after { content: ""; position: absolute; right: -18px; bottom: -28px; width: 90px; height: 90px; border-radius: 50%; background: var(--primary-light); opacity: .7; }
+    .stat-icon { width: 38px; height: 38px; display: grid; place-items: center; border-radius: 10px; background: var(--primary-light); color: var(--primary); font-size: 1.1rem; margin-bottom: 16px; }
+    .stat-card .value { margin-top: 7px; }
+    .section-view { display: none; }
+    .section-view.active { display: block; }
+    .page-heading { margin: 3px 0 20px; }
+    .page-heading h2 { font-size: 1.35rem; margin-bottom: 5px; }
+    .toolbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 16px; }
+    .toolbar input { max-width: 320px; width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: .92rem; }
+    .empty-state { text-align: center; color: var(--text-muted); padding: 28px 12px; }
+    .form-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 18px; }
+    .form-group textarea { min-height: 82px; resize: vertical; }
+    .badge { white-space: nowrap; }
+    .chat-note { color: var(--text-muted); font-size: .9rem; margin: -6px 0 16px; }
+    .avatar { width: 36px; height: 36px; display: inline-grid; place-items: center; flex-shrink: 0; border-radius: 50%; background: #e0f2fe; color: #0369a1; font-weight: 700; }
+    .patient-cell { display: flex; align-items: center; gap: 10px; }
+    .patient-cell small { display: block; color: var(--text-muted); margin-top: 2px; }
+    .mobile-menu { display: none; }
+    @media (max-width: 900px) { .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (max-width: 768px) {
+      aside.sidebar { position: static; height: auto; }
+      .brand { padding: 14px 16px; }
+      nav.menu { flex-direction: row; overflow-x: auto; padding: 8px; }
+      nav.menu a { white-space: nowrap; padding: 9px 12px; }
+      .sidebar-footer { display: none; }
+      header.topbar { padding: 13px 16px; }
+      header.topbar h1 { font-size: 1.1rem; }
+      .content-container { padding: 18px 14px; }
+      .welcome { align-items: flex-start; flex-direction: column; }
+      .topbar-meta { font-size: .8rem; }
+      .card { padding: 18px; }
+    }
+    @media (max-width: 480px) { .stats-grid { grid-template-columns: 1fr 1fr; gap: 10px; } .stat-card { padding: 14px; } .stat-card .value { font-size: 1.4rem; } .stat-card .label { font-size: .72rem; } .topbar-meta .status-label { display: none; } }
+  </style>
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="brand"><h2><span class="brand-mark" aria-hidden="true">✚</span> CarePoint</h2><p>Hospital management system</p></div>
+    <nav class="menu" aria-label="Main navigation">
+      <a href="#dashboard" class="active" data-view="dashboard"><span>▦</span> Dashboard</a>
+      <a href="#patients" data-view="patients"><span>♙</span> Patients</a>
+      <a href="#visits" data-view="visits"><span>✚</span> Doctor visits</a>
+      <a href="#laboratory" data-view="laboratory"><span>⚗</span> Laboratory</a>
+      <a href="#payments" data-view="payments"><span>৳</span> Payments</a>
+      <a href="#assistant" data-view="assistant"><span>✦</span> Report assistant</a>
+    </nav>
+    <div class="sidebar-footer"><button class="btn-sample" id="sample-data" type="button"><span>✦</span> Load sample data</button><small>CarePoint Hospital · v1.0</small></div>
+  </aside>
+
+  <main class="main-content">
+    <header class="topbar"><h1 id="topbar-title">Dashboard</h1><div class="topbar-meta"><span><i class="status-dot"></i><span class="status-label">System online</span></span><span id="header-date"></span></div></header>
+    <div class="content-container">
+      <section class="section-view active" id="view-dashboard">
+        <div class="welcome"><div><h2>Good day, CarePoint team</h2><p>Here’s what’s happening at your hospital today.</p></div><div class="welcome-date" id="welcome-date"></div></div>
+        <div class="stats-grid">
+          <article class="stat-card"><div class="stat-icon">♙</div><span class="label">Total patients</span><strong class="value" id="stat-patients">0</strong><span class="desc">Registered patient records</span></article>
+          <article class="stat-card"><div class="stat-icon">✚</div><span class="label">Doctor visits</span><strong class="value" id="stat-visits">0</strong><span class="desc">Appointments recorded</span></article>
+          <article class="stat-card"><div class="stat-icon">⚗</div><span class="label">Lab orders</span><strong class="value" id="stat-tests">0</strong><span class="desc" id="stat-pending">0 pending results</span></article>
+          <article class="stat-card"><div class="stat-icon">৳</div><span class="label">Payments received</span><strong class="value" id="stat-revenue">Tk 0</strong><span class="desc">All recorded transactions</span></article>
+        </div>
+        <section class="card"><div class="card-title">Recent doctor visits <a class="btn btn-outline" href="#visits" data-view="visits" style="font-size:.82rem;padding:7px 11px">View all</a></div><div class="table-scroll"><table><thead><tr><th>Patient</th><th>Doctor</th><th>Visit date</th><th>Fee</th></tr></thead><tbody id="recent-visits"></tbody></table></div></section>
+      </section>
+
+      <section class="section-view" id="view-patients">
+        <div class="page-heading"><h2>Patient records</h2><p class="muted">Register patients and keep their contact details organized.</p></div>
+        <section class="card"><h3 class="card-title">Register a patient</h3><form id="patient-form"><div class="form-grid">
+          <div class="form-group"><label for="patient-name">Full name</label><input id="patient-name" name="name" required placeholder="Patient full name"></div>
+          <div class="form-group"><label for="patient-age">Age</label><input id="patient-age" name="age" type="number" min="0" max="120" required placeholder="Age in years"></div>
+          <div class="form-group"><label for="patient-gender">Gender</label><select id="patient-gender" name="gender" required><option value="">Select gender</option><option>Female</option><option>Male</option><option>Other</option></select></div>
+          <div class="form-group"><label for="patient-phone">Phone number</label><input id="patient-phone" name="phone" type="tel" required placeholder="e.g. 01712345678"></div>
+          <div class="form-group"><label for="patient-address">Address</label><input id="patient-address" name="address" required placeholder="Area, city"></div>
+        </div><div class="form-actions"><button class="btn btn-primary" type="submit">Register patient</button></div></form></section>
+        <section class="card"><div class="card-title">All patients <span class="badge badge-info" id="patient-count">0 records</span></div><div class="toolbar"><input type="search" id="patient-search" placeholder="Search name, phone or ID…" aria-label="Search patients"></div><div class="table-scroll"><table><thead><tr><th>Patient</th><th>Age / gender</th><th>Phone</th><th>Address</th><th>Registered</th></tr></thead><tbody id="patients-table"></tbody></table></div></section>
+      </section>
+
+      <section class="section-view" id="view-visits">
+        <div class="page-heading"><h2>Doctor visits</h2><p class="muted">Record consultations and review visit history.</p></div>
+        <section class="card"><h3 class="card-title">Record a visit</h3><form id="visit-form"><div class="form-grid">
+          <div class="form-group"><label for="visit-patient">Patient</label><select id="visit-patient" required></select></div>
+          <div class="form-group"><label for="visit-doctor">Doctor</label><select id="visit-doctor" required></select></div>
+          <div class="form-group"><label for="visit-date">Visit date</label><input id="visit-date" type="date" required></div>
+          <div class="form-group"><label for="visit-problem">Reason for visit</label><input id="visit-problem" required placeholder="Symptoms or reason"></div>
+          <div class="form-group"><label for="visit-prescription">Prescription / notes</label><textarea id="visit-prescription" placeholder="Optional treatment notes"></textarea></div>
+        </div><div class="form-actions"><button class="btn btn-primary" type="submit">Save visit</button></div></form></section>
+        <section class="card"><div class="card-title">Visit history</div><div class="table-scroll"><table><thead><tr><th>Visit ID</th><th>Patient</th><th>Doctor</th><th>Reason</th><th>Date</th><th>Fee</th></tr></thead><tbody id="visits-table"></tbody></table></div></section>
+      </section>
+
+      <section class="section-view" id="view-laboratory">
+        <div class="page-heading"><h2>Laboratory</h2><p class="muted">Create lab orders and track their completion.</p></div>
+        <section class="card"><h3 class="card-title">New lab order</h3><form id="test-form"><div class="form-grid">
+          <div class="form-group"><label for="test-patient">Patient</label><select id="test-patient" required></select></div>
+          <div class="form-group"><label for="test-catalog">Test</label><select id="test-catalog" required></select></div>
+          <div class="form-group"><label for="test-date">Order date</label><input id="test-date" type="date" required></div>
+        </div><div class="form-actions"><button class="btn btn-primary" type="submit">Create lab order</button></div></form></section>
+        <section class="card"><div class="card-title">Lab orders</div><div class="table-scroll"><table><thead><tr><th>Order ID</th><th>Patient</th><th>Test</th><th>Date</th><th>Price</th><th>Status</th><th>Action</th></tr></thead><tbody id="tests-table"></tbody></table></div></section>
+      </section>
+
+      <section class="section-view" id="view-payments">
+        <div class="page-heading"><h2>Payments</h2><p class="muted">Review receipts and outstanding charges.</p></div>
+        <section class="stats-grid" style="margin-bottom:20px"><article class="stat-card"><span class="label">Total received</span><strong class="value" id="payment-total">Tk 0</strong></article><article class="stat-card"><span class="label">Transactions</span><strong class="value" id="payment-count">0</strong></article></section>
+        <section class="card"><div class="card-title">Payment history</div><div class="table-scroll"><table><thead><tr><th>Receipt</th><th>Patient</th><th>Type</th><th>Reference</th><th>Date</th><th>Method</th><th>Amount</th></tr></thead><tbody id="payments-table"></tbody></table></div></section>
+      </section>
+
+      <section class="section-view" id="view-assistant">
+        <div class="page-heading"><h2>Report assistant</h2><p class="muted">Ask questions about the data currently saved in this browser.</p></div>
+        <p class="chat-note">The assistant uses the ChatterMate API. Configure CHATTERMATE_API_KEY in .env on the server to enable answers.</p>
+        <div class="chat-window"><div class="chat-messages" id="chat-messages"><div class="msg assistant">Hello! I can help answer questions about your hospital report data. What would you like to know?</div></div><div class="quick-prompts"><button class="quick-prompt-btn" type="button" data-prompt="How many patients are registered?">How many patients?</button><button class="quick-prompt-btn" type="button" data-prompt="What is the total payments received?">Total payments</button><button class="quick-prompt-btn" type="button" data-prompt="How many lab orders are pending?">Pending lab orders</button></div><form class="chat-input-area" id="chat-form"><input id="chat-question" aria-label="Ask a question" placeholder="Ask about the report data…" required><button class="btn btn-primary" type="submit">Send</button></form></div>
+      </section>
+    </div>
+  </main>
+
+  <script src="/app.js"></script>
+  <script>
+    const $ = (selector) => document.querySelector(selector);
+    const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
+    const getPatients = () => getStore('hp_patients');
+    const getVisits = () => getStore('hp_visits');
+    const getTests = () => getStore('hp_tests');
+    const getPayments = () => getStore('hp_payments');
+    const dateLabel = (date) => date ? new Date(`${date}T00:00:00`).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) : '—';
+    const nextId = (items, prefix) => `${prefix}-${String(items.reduce((max, item) => Math.max(max, Number((item.id || '').split('-').pop()) || 0), 0) + 1).padStart(4, '0')}`;
+    const emptyRow = (cols, text) => `<tr><td colspan="${cols}" class="empty-state">${text}</td></tr>`;
+
+    function populateSelects() {
+      const patients = getPatients();
+      ['#visit-patient', '#test-patient'].forEach((selector) => {
+        const select = $(selector);
+        const prior = select.value;
+        select.innerHTML = '<option value="">Choose a patient</option>' + patients.map((patient) => `<option value="${escapeHtml(patient.id)}">${escapeHtml(patient.name)} · ${escapeHtml(patient.id)}</option>`).join('');
+        if (patients.some((patient) => patient.id === prior)) select.value = prior;
+      });
+      const doctors = getStore('hp_doctors');
+      $('#visit-doctor').innerHTML = '<option value="">Choose a doctor</option>' + doctors.map((doctor) => `<option value="${escapeHtml(doctor.id)}">${escapeHtml(doctor.name)} · ${escapeHtml(doctor.specialty)}</option>`).join('');
+      $('#test-catalog').innerHTML = '<option value="">Choose a test</option>' + LAB_TEST_CATALOG.map((test) => `<option value="${escapeHtml(test.code)}">${escapeHtml(test.name)} · ${formatTk(test.price)}</option>`).join('');
+    }
+
+    function render() {
+      const patients = getPatients();
+      const visits = getVisits().sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+      const tests = getTests().sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+      const payments = getPayments().sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+      const revenue = payments.reduce((sum, payment) => sum + (Number(payment.amount) || 0), 0);
+      $('#stat-patients').textContent = patients.length.toLocaleString();
+      $('#stat-visits').textContent = visits.length.toLocaleString();
+      $('#stat-tests').textContent = tests.length.toLocaleString();
+      $('#stat-pending').textContent = `${tests.filter((test) => test.status === 'Pending').length} pending results`;
+      $('#stat-revenue').textContent = formatTk(revenue);
+      $('#payment-total').textContent = formatTk(revenue);
+      $('#payment-count').textContent = payments.length.toLocaleString();
+      $('#patient-count').textContent = `${patients.length} ${patients.length === 1 ? 'record' : 'records'}`;
+      populateSelects();
+
+      const query = $('#patient-search').value.trim().toLowerCase();
+      const filteredPatients = patients.filter((patient) => [patient.name, patient.phone, patient.id].some((value) => String(value || '').toLowerCase().includes(query)));
+      $('#patients-table').innerHTML = filteredPatients.length ? filteredPatients.map((patient) => `<tr><td><div class="patient-cell"><span class="avatar">${escapeHtml((patient.name || '?').trim().charAt(0).toUpperCase())}</span><span><strong>${escapeHtml(patient.name)}</strong><small>${escapeHtml(patient.id)}</small></span></div></td><td>${escapeHtml(patient.age)} / ${escapeHtml(patient.gender)}</td><td>${escapeHtml(patient.phone)}</td><td>${escapeHtml(patient.address)}</td><td>${dateLabel(patient.registeredAt)}</td></tr>`).join('') : emptyRow(5, query ? 'No patients match your search.' : 'No patient records yet. Register a patient above.');
+      $('#visits-table').innerHTML = visits.length ? visits.map((visit) => `<tr><td>${escapeHtml(visit.id)}</td><td>${escapeHtml(visit.patientName)}</td><td>${escapeHtml(visit.doctorName)}<small class="muted" style="display:block">${escapeHtml(visit.doctorSpecialty)}</small></td><td>${escapeHtml(visit.problem)}</td><td>${dateLabel(visit.date)}</td><td>${formatTk(visit.fee)}</td></tr>`).join('') : emptyRow(6, 'No doctor visits recorded yet.');
+      $('#recent-visits').innerHTML = visits.length ? visits.slice(0, 5).map((visit) => `<tr><td><div class="patient-cell"><span class="avatar">${escapeHtml((visit.patientName || '?').trim().charAt(0).toUpperCase())}</span><span><strong>${escapeHtml(visit.patientName)}</strong><small>${escapeHtml(visit.problem)}</small></span></div></td><td>${escapeHtml(visit.doctorName)}</td><td>${dateLabel(visit.date)}</td><td>${formatTk(visit.fee)}</td></tr>`).join('') : emptyRow(4, 'Your recent visits will appear here.');
+      $('#tests-table').innerHTML = tests.length ? tests.map((test) => `<tr><td>${escapeHtml(test.id)}</td><td>${escapeHtml(test.patientName)}</td><td>${escapeHtml(test.testName)}</td><td>${dateLabel(test.date)}</td><td>${formatTk(test.price)}</td><td><span class="badge ${test.status === 'Done' ? 'badge-success' : 'badge-warning'}">${escapeHtml(test.status)}</span></td><td>${test.status === 'Pending' ? `<button type="button" class="btn btn-outline mark-done" data-id="${escapeHtml(test.id)}" style="padding:6px 9px;font-size:.8rem">Mark done</button>` : escapeHtml(test.result || '—')}</td></tr>`).join('') : emptyRow(7, 'No lab orders recorded yet.');
+      $('#payments-table').innerHTML = payments.length ? payments.map((payment) => `<tr><td>${escapeHtml(payment.id)}</td><td>${escapeHtml(payment.patientName)}</td><td>${escapeHtml(payment.type)}</td><td>${escapeHtml(payment.refId)}</td><td>${dateLabel(payment.date)}</td><td>${escapeHtml(payment.method)}</td><td><strong>${formatTk(payment.amount)}</strong></td></tr>`).join('') : emptyRow(7, 'No payments recorded yet.');
+    }
+
+    function recordPayment(patient, type, refId, amount, date) {
+      const payments = getPayments();
+      payments.push({ id: `PAY-${String(payments.length + 1001)}`, patientId: patient.id, patientName: patient.name, type, refId, amount: Number(amount), method: 'Cash', date });
+      setStore('hp_payments', payments);
+    }
+
+    document.querySelectorAll('[data-view]').forEach((link) => link.addEventListener('click', (event) => {
+      event.preventDefault();
+      const view = link.dataset.view;
+      document.querySelectorAll('.section-view').forEach((section) => section.classList.toggle('active', section.id === `view-${view}`));
+      document.querySelectorAll('nav.menu [data-view]').forEach((item) => item.classList.toggle('active', item.dataset.view === view));
+      $('#topbar-title').textContent = link.textContent.trim();
+      history.replaceState(null, '', `#${view}`);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }));
+
+    $('#patient-form').addEventListener('submit', (event) => {
+      event.preventDefault();
+      const form = new FormData(event.currentTarget);
+      const patients = getPatients();
+      patients.push({ id: nextId(patients, 'P'), name: form.get('name').trim(), age: Number(form.get('age')), gender: form.get('gender'), phone: form.get('phone').trim(), address: form.get('address').trim(), registeredAt: getTodayString() });
+      setStore('hp_patients', patients);
+      event.currentTarget.reset(); render();
+    });
+    $('#patient-search').addEventListener('input', render);
+
+    $('#visit-form').addEventListener('submit', (event) => {
+      event.preventDefault();
+      const patient = getPatients().find((item) => item.id === $('#visit-patient').value);
+      const doctor = getStore('hp_doctors').find((item) => item.id === $('#visit-doctor').value);
+      if (!patient || !doctor) return;
+      const visits = getVisits();
+      const visit = { id: nextId(visits, 'V'), patientId: patient.id, patientName: patient.name, doctorId: doctor.id, doctorName: doctor.name, doctorSpecialty: doctor.specialty, fee: doctor.fee, problem: $('#visit-problem').value.trim(), prescription: $('#visit-prescription').value.trim(), date: $('#visit-date').value };
+      visits.push(visit); setStore('hp_visits', visits); recordPayment(patient, 'Doctor Visit', visit.id, doctor.fee, visit.date);
+      event.currentTarget.reset(); $('#visit-date').value = getTodayString(); render();
+    });
+
+    $('#test-form').addEventListener('submit', (event) => {
+      event.preventDefault();
+      const patient = getPatients().find((item) => item.id === $('#test-patient').value);
+      const catalogItem = LAB_TEST_CATALOG.find((item) => item.code === $('#test-catalog').value);
+      if (!patient || !catalogItem) return;
+      const tests = getTests();
+      const test = { id: nextId(tests, 'T'), patientId: patient.id, patientName: patient.name, testCode: catalogItem.code, testName: catalogItem.name, price: catalogItem.price, status: 'Pending', result: '', date: $('#test-date').value };
+      tests.push(test); setStore('hp_tests', tests); recordPayment(patient, 'Lab Test', test.id, test.price, test.date);
+      event.currentTarget.reset(); $('#test-date').value = getTodayString(); render();
+    });
+
+    $('#tests-table').addEventListener('click', (event) => {
+      const button = event.target.closest('.mark-done');
+      if (!button) return;
+      const tests = getTests();
+      const test = tests.find((item) => item.id === button.dataset.id);
+      if (test) { test.status = 'Done'; test.result = test.result || 'Results recorded.'; setStore('hp_tests', tests); render(); }
+    });
+
+    document.querySelectorAll('[data-prompt]').forEach((button) => button.addEventListener('click', () => { $('#chat-question').value = button.dataset.prompt; $('#chat-question').focus(); }));
+    $('#chat-form').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const question = $('#chat-question').value.trim();
+      if (!question) return;
+      const messages = $('#chat-messages');
+      messages.insertAdjacentHTML('beforeend', `<div class="msg user">${escapeHtml(question)}</div>`);
+      $('#chat-question').value = '';
+      const pending = document.createElement('div'); pending.className = 'msg assistant'; pending.textContent = 'Thinking…'; messages.append(pending); messages.scrollTop = messages.scrollHeight;
+      try {
+        const response = await fetch('/ask', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ question, data: { patients: getPatients(), visits: getVisits(), tests: getTests(), payments: getPayments() } }) });
+        const result = await response.json();
+        pending.textContent = result.answer || result.error || 'No response was returned.';
+      } catch (error) { pending.textContent = 'Could not reach the report assistant. Check the server connection and API key configuration.'; }
+      messages.scrollTop = messages.scrollHeight;
+    });
+
+    $('#sample-data').addEventListener('click', () => {
+      if ((getPatients().length || getVisits().length || getTests().length || getPayments().length) && !confirm('Replace the current records with fresh sample data?')) return;
+      loadSampleData();
+    });
+
+    const today = getTodayString();
+    $('#visit-date').value = today; $('#test-date').value = today;
+    $('#header-date').textContent = new Date().toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    $('#welcome-date').textContent = new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+    const initialView = location.hash.slice(1);
+    if (initialView && $(`[data-view="${CSS.escape(initialView)}"]`)) $(`[data-view="${CSS.escape(initialView)}"]`).click();
+    render();
+  </script>
+</body>
+</html>
